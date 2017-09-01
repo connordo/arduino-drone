@@ -13,19 +13,19 @@
 #define    ACC_FULL_SCALE_8_G        0x10
 #define    ACC_FULL_SCALE_16_G       0x18
 
-#define GX_MAX 100
-#define GX_MIN -100
-#define GY_MAX 100
-#define GY_MIN -100
-#define GZ_MAX 100
-#define GZ_MIN -100
+//#define GX_MAX 100
+//#define GX_MIN -100
+//#define GY_MAX 100
+//#define GY_MIN -100
+//#define GZ_MAX 100
+//#define GZ_MIN -100
 
-#define AX_MAX -300
-#define AX_MIN -400
-#define AY_MAX -140
+#define AX_MAX -330
+#define AX_MIN -370
+#define AY_MAX -160
 #define AY_MIN -200
 #define AZ_MAX 1700
-#define AZ_MIN 1400
+#define AZ_MIN 1500
 
 
 #define BLUE_LED 11
