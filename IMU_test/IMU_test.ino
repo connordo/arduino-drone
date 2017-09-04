@@ -43,9 +43,9 @@ void setup() {
   Wire.begin();
 
   // Configure gyroscope range
-  I2CwriteByte(MPU9250_ADDRESS, 27, GYRO_FULL_SCALE_2000_DPS);
+  I2CwriteByte(MPU9250_ADDRESS, 27, GYRO_FULL_SCALE_1000_DPS);
   // Configure accelerometers range
-  I2CwriteByte(MPU9250_ADDRESS, 28, ACC_FULL_SCALE_16_G);
+  I2CwriteByte(MPU9250_ADDRESS, 28, ACC_FULL_SCALE_8_G);
   // Set by pass mode for the magnetometers
   I2CwriteByte(MPU9250_ADDRESS, 0x37, 0x02);
 

@@ -20,12 +20,12 @@
 //#define GZ_MAX 100
 //#define GZ_MIN -100
 
-#define AX_MAX -330
-#define AX_MIN -370
-#define AY_MAX -160
-#define AY_MIN -200
-#define AZ_MAX 1700
-#define AZ_MIN 1500
+#define AX_MAX 0
+#define AX_MIN -800
+#define AY_MAX 200
+#define AY_MIN -1000
+#define AZ_MAX 2400
+#define AZ_MIN 1200
 
 
 #define BLUE_LED 11
