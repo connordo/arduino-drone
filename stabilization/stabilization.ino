@@ -1,5 +1,14 @@
 #include <Wire.h>
 
+#define MOTOR_1 10
+#define MOTOR_2 9
+#define MOTOR_3 6
+#define MOTOR_4 11
+
+#define ACCEL 255
+#define STABL 0
+#define DECEL 10
+
 #define    MPU9250_ADDRESS            0x68
 #define    MAG_ADDRESS                0x0C
 
@@ -13,18 +22,18 @@
 #define    ACC_FULL_SCALE_8_G        0x10
 #define    ACC_FULL_SCALE_16_G       0x18
 
-//#define GX_MAX 100
-//#define GX_MIN -100
-//#define GY_MAX 100
-//#define GY_MIN -100
-//#define GZ_MAX 100
-//#define GZ_MIN -100
+#define GX_MAX 100
+#define GX_MIN -100
+#define GY_MAX 100
+#define GY_MIN -100
+#define GZ_MAX 100
+#define GZ_MIN -100
 
 #define AX_MAX 0
-#define AX_MIN -800
-#define AY_MAX 200
+#define AX_MIN -500
+#define AY_MAX 0
 #define AY_MIN -1000
-#define AZ_MAX 2400
+#define AZ_MAX 2000
 #define AZ_MIN 1200
 
 
@@ -125,17 +134,42 @@ void loop() {
 
   // End of line
   Serial.println("");
-  if (ax < AX_MAX && ax > AX_MIN) {
-    if (ay < AY_MAX && ay > AY_MIN) {
-      if (az < AZ_MAX && az > AZ_MIN) {
-        digitalWrite(BLUE_LED, HIGH);
-      }
-      digitalWrite(BLUE_LED, LOW);
-    }
-    digitalWrite(BLUE_LED, LOW);
+  //  if (ax < AX_MAX && ax > AX_MIN) {
+  //    if (ay < AY_MAX && ay > AY_MIN) {
+  //      if (az < AZ_MAX && az > AZ_MIN) {
+  //        digitalWrite(BLUE_LED, HIGH);
+  //        analogWrite(MOTOR_1, STABL);
+  //        analogWrite(MOTOR_2, STABL);
+  //        analogWrite(MOTOR_3, STABL);
+  //        analogWrite(MOTOR_4, STABL);
+  //      }
+  //      analogWrite(MOTOR_1, ACCEL);
+  //      analogWrite(MOTOR_2, ACCEL);
+  //      analogWrite(MOTOR_3, ACCEL);
+  //      analogWrite(MOTOR_4, ACCEL);
+  //    }
+  //    analogWrite(MOTOR_1, ACCEL);
+  //    analogWrite(MOTOR_2, ACCEL);
+  //    analogWrite(MOTOR_3, ACCEL);
+  //    analogWrite(MOTOR_4, ACCEL);
+  //  }
+  //  else {
+  //    analogWrite(MOTOR_1, ACCEL);
+  //    analogWrite(MOTOR_2, ACCEL);
+  //    analogWrite(MOTOR_3, ACCEL);
+  //    analogWrite(MOTOR_4, ACCEL);
+  //  }
+  //delay(100);
+  if (gx < GX_MAX && gx > GX_MIN) {
+    analogWrite(MOTOR_1, STABL);
+    analogWrite(MOTOR_2, STABL);
+    analogWrite(MOTOR_3, STABL);
+    analogWrite(MOTOR_4, STABL);
   }
   else {
-    digitalWrite(BLUE_LED, LOW);
+    analogWrite(MOTOR_1, ACCEL);
+    analogWrite(MOTOR_2, ACCEL);
+    analogWrite(MOTOR_3, ACCEL);
+    analogWrite(MOTOR_4, ACCEL);
   }
-  //delay(100);
 }

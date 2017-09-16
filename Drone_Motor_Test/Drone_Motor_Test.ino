@@ -13,10 +13,13 @@ void setup() {
 void loop() {
   analogWrite(MOTOR, MAX_SPEED);
   delay(TIME_INTERVAL);
-  //  analogWrite(MOTOR, HIGH_SPEED);
-  //  delay(TIME_INTERVAL);
-  //  analogWrite(MOTOR, LOW_SPEED);
-  //  delay(TIME_INTERVAL);
+  
+  analogWrite(MOTOR, HIGH_SPEED);
+  delay(TIME_INTERVAL);
+  
+  analogWrite(MOTOR, LOW_SPEED);
+  delay(TIME_INTERVAL);
+  
   analogWrite(MOTOR, OFF);
   delay(TIME_INTERVAL);
 }
