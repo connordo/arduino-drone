@@ -1,3 +1,4 @@
+movement = csvread('movement.csv');
 samples = movement(:,1);
 accel_x = movement(:,2);
 accel_y = movement(:,3);
