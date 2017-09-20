@@ -40,7 +40,7 @@
 //Accelerometer Tolerance Thresholds
 #define AX_MAX (ACC_REST_VAL_X+BUFFER)//-65
 #define AX_MIN (ACC_REST_VAL_X-BUFFER)//-665
-#define AY_MAX (ACC_REST_VAL_Y+BUFFER)//122
+#define AY_MAX (ACC_REST_VAL_Y+BUFFER)//222
 #define AY_MIN (ACC_REST_VAL_Y-BUFFER)//-478
 #define AZ_MAX (ACC_REST_VAL_Z+BUFFER)//2080
 #define AZ_MIN (ACC_REST_VAL_Z-BUFFER)//1080
@@ -57,6 +57,11 @@
 #define ST_INIT 0
 #define ST_STBL 1
 #define ST_USTBL 2
+
+//Board Angles
+#define OVER_POSITIVE 1
+#define IN_SPEC 0;
+#define OVER_NEGATIVE -1
 
 //Global Variables
 int16_t ax;
@@ -136,10 +141,75 @@ bool is_stable(int16_t *ax, int16_t *ay, int16_t *az, int16_t *gx, int16_t *gy, 
 
 void self_correct(int16_t *ax, int16_t *ay, int16_t *az, int16_t *gx, int16_t *gy, int16_t *gz)
 {
-  analogWrite(MOTOR_1, ACCEL);
-  analogWrite(MOTOR_2, ACCEL);
-  analogWrite(MOTOR_3, ACCEL);
-  analogWrite(MOTOR_4, ACCEL);
+  //-----Check the X-axis-----
+  if (*ax > AX_MAX) {
+    *ax = OVER_POSITIVE;
+  }
+  else if (*ax < AX_MIN) {
+    *ax = OVER_NEGATIVE;
+  }
+  else {
+    *ax = IN_SPEC;
+  }
+
+  //-----Check the Y-axis-----
+  if (*ay > AY_MAX) {
+    *ay = OVER_POSITIVE;
+  }
+  else if (*ay < AY_MIN) {
+    *ay = OVER_NEGATIVE;
+  }
+  else {
+    *ay = IN_SPEC;
+  }
+
+  //-----Check the Z-axis-----
+  if (*az > AZ_MAX) {
+    *az = OVER_POSITIVE;
+  }
+  else if (*az < AZ_MIN) {
+    *az = OVER_NEGATIVE;
+  }
+  else {
+    *az = IN_SPEC;
+  }
+
+  switch (*ax) {
+    case OVER_POSITIVE:
+      analogWrite(MOTOR_1, ACCEL);
+      analogWrite(MOTOR_2, ACCEL);
+      analogWrite(MOTOR_3, DECEL);
+      analogWrite(MOTOR_4, DECEL);
+      break;
+    case OVER_NEGATIVE:
+      analogWrite(MOTOR_1, DECEL);
+      analogWrite(MOTOR_2, DECEL);
+      analogWrite(MOTOR_3, ACCEL);
+      analogWrite(MOTOR_4, ACCEL);
+      break;
+    default:
+      break;
+  }
+  switch (*ay) {
+    case OVER_POSITIVE:
+      analogWrite(MOTOR_1, ACCEL);
+      analogWrite(MOTOR_2, DECEL);
+      analogWrite(MOTOR_3, DECEL);
+      analogWrite(MOTOR_4, ACCEL);
+      break;
+    case OVER_NEGATIVE:
+      analogWrite(MOTOR_1, DECEL);
+      analogWrite(MOTOR_2, ACCEL);
+      analogWrite(MOTOR_3, ACCEL);
+      analogWrite(MOTOR_4, DECEL);
+      break;
+    default:
+      break;
+  }
+  //  analogWrite(MOTOR_1, ACCEL);
+  //  analogWrite(MOTOR_2, ACCEL);
+  //  analogWrite(MOTOR_3, ACCEL);
+  //  analogWrite(MOTOR_4, ACCEL);
 }
 
 void setup() {
@@ -158,6 +228,29 @@ void setup() {
   //  I2CwriteByte(MAG_ADDRESS, 0x0A, 0x01); //I rdon't think I wasnt to do this yet....
 
   Serial.write("Beginning I2C Read Attempt:\n");
+
+
+  ///////////////
+  analogWrite(MOTOR_1, ACCEL);
+  delay(500);
+  analogWrite(MOTOR_1, STABL);
+  delay(500);
+
+  analogWrite(MOTOR_2, ACCEL);
+  delay(500);
+  analogWrite(MOTOR_2, STABL);
+  delay(500);
+
+  analogWrite(MOTOR_3, ACCEL);
+  delay(500);
+  analogWrite(MOTOR_3, STABL);
+  delay(500);
+
+  analogWrite(MOTOR_4, ACCEL);
+  delay(500);
+  analogWrite(MOTOR_4, STABL);
+  delay(500);
+  ///////////////
 }
 
 long int cpt = 0; //this is a counter
@@ -167,10 +260,8 @@ void loop() {
   bool val = 5;
 
   update_IMU_data(&ax, &ay, &az, &gx, &gy, &gz);
-  val = is_stable(&ax, &ay, &az, &gx, &gy, &gz);
-  if (!val)
+  if (!(is_stable(&ax, &ay, &az, &gx, &gy, &gz)))
   {
-    Serial.println(val);
     self_correct(&ax, &ay, &az, &gx, &gy, &gz);
   }
 
