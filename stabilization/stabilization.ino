@@ -28,7 +28,7 @@
 #define ACC_REST_VAL_X -365 //calculated in MatLab
 #define ACC_REST_VAL_Y -178 //calculated in MatLab
 #define ACC_REST_VAL_Z 1580 //calculated in MatLab
-
+#define BUFFER 400
 //Gyroscope Tolerance Thresholds
 #define GX_MAX 100
 #define GX_MIN -100
@@ -38,17 +38,17 @@
 #define GZ_MIN -100
 
 //Accelerometer Tolerance Thresholds
-#define AX_MAX ACC_REST_VAL_X + 300
-#define AX_MIN ACC_REST_VAL_X - 300
-#define AY_MAX ACC_REST_VAL_Y + 300
-#define AY_MIN ACC_REST_VAL_Y - 300
-#define AZ_MAX ACC_REST_VAL_Z + 500
-#define AZ_MIN ACC_REST_VAL_Z + 500
+#define AX_MAX (ACC_REST_VAL_X+BUFFER)//-65
+#define AX_MIN (ACC_REST_VAL_X-BUFFER)//-665
+#define AY_MAX (ACC_REST_VAL_Y+BUFFER)//122
+#define AY_MIN (ACC_REST_VAL_Y-BUFFER)//-478
+#define AZ_MAX (ACC_REST_VAL_Z+BUFFER)//2080
+#define AZ_MIN (ACC_REST_VAL_Z-BUFFER)//1080
 
 //Shortcuts
-#define ACCEL_X_WITHIN_THRESH (ax<AX_MAX&&ax>AX_MIN)
-#define ACCEL_Y_WITHIN_THRESH (ay<AY_MAX&&ay>AY_MIN)
-#define ACCEL_Z_WITHIN_THRESH (az<AZ_MAX&&az>AZ_MIN)
+#define ACCEL_X_WITHIN_THRESH (*ax<AX_MAX&&*ax>AX_MIN)
+#define ACCEL_Y_WITHIN_THRESH (*ay<AY_MAX&&*ay>AY_MIN)
+#define ACCEL_Z_WITHIN_THRESH (*az<AZ_MAX&&*az>AZ_MIN)
 #define GYRO_X_WITHIN_THRESH (gx<GX_MAX&&gx>GX_MIN)
 #define GYRO_Y_WITHIN_THRESH (gy<GY_MAX&&gy>GY_MIN)
 #define GYRO_X_WITHIN_THRESH (gz<GZ_MAX&&gz>GZ_MIN)
@@ -59,12 +59,12 @@
 #define ST_USTBL 2
 
 //Global Variables
-static int16_t ax;
-static int16_t ay;
-static int16_t az;
-static int16_t gx;
-static int16_t gy;
-static int16_t gz;
+int16_t ax;
+int16_t ay;
+int16_t az;
+int16_t gx;
+int16_t gy;
+int16_t gz;
 
 void I2Cread(uint8_t Address, uint8_t Register, uint8_t Nbytes, uint8_t* Data)
 {
@@ -89,38 +89,59 @@ void I2CwriteByte(uint8_t Address, uint8_t Register, uint8_t Data)
   Wire.write(Data);
   Wire.endTransmission();
 }
-/*
-void update_IMU_data()
+
+void update_IMU_data(int16_t *ax, int16_t *ay, int16_t *az, int16_t *gx, int16_t *gy, int16_t *gz)
 {
   uint8_t Buf[14];
   I2Cread(MPU9250_ADDRESS, 0x3B, 14, Buf);
   // Accelerometer
-  int16_t ax = -(Buf[0] << 8 | Buf[1]);
-  int16_t ay = -(Buf[2] << 8 | Buf[3]);
-  int16_t az = Buf[4] << 8 | Buf[5];
+  *ax = -(Buf[0] << 8 | Buf[1]);
+  *ay = -(Buf[2] << 8 | Buf[3]);
+  *az = Buf[4] << 8 | Buf[5];
 
   // Gyroscope
-  int16_t gx = -(Buf[8] << 8 | Buf[9]);
-  int16_t gy = -(Buf[10] << 8 | Buf[11]);
-  int16_t gz = Buf[12] << 8 | Buf[13];
+  *gx = -(Buf[8] << 8 | Buf[9]);
+  *gy = -(Buf[10] << 8 | Buf[11]);
+  *gz = Buf[12] << 8 | Buf[13];
 
   // Accelerometer
-  Serial.print (ax, DEC);
+  Serial.print (*ax, DEC);
   Serial.print ("\t");
-  Serial.print (ay, DEC);
+  Serial.print (*ay, DEC);
   Serial.print ("\t");
-  Serial.print (az, DEC);
+  Serial.print (*az, DEC);
   Serial.print ("\t");
   // Gyroscope
-  Serial.print (gx, DEC);
+  Serial.print (*gx, DEC);
   Serial.print ("\t");
-  Serial.print (gy, DEC);
+  Serial.print (*gy, DEC);
   Serial.print ("\t");
-  Serial.print (gz, DEC);
+  Serial.print (*gz, DEC);
   Serial.print ("\t");
   Serial.println("");
 }
-*/
+
+bool is_stable(int16_t *ax, int16_t *ay, int16_t *az, int16_t *gx, int16_t *gy, int16_t *gz)
+{
+  if (((*ax < AX_MAX) && (*ax > AX_MIN)) && ((*ay < AY_MAX) && (*ay > AY_MIN)) && ((*az < AZ_MAX) && (*az > AZ_MIN)))
+  {
+    analogWrite(MOTOR_1, STABL);
+    analogWrite(MOTOR_2, STABL);
+    analogWrite(MOTOR_3, STABL);
+    analogWrite(MOTOR_4, STABL);
+    return true;
+  }
+  else return false;
+}
+
+void self_correct(int16_t *ax, int16_t *ay, int16_t *az, int16_t *gx, int16_t *gy, int16_t *gz)
+{
+  analogWrite(MOTOR_1, ACCEL);
+  analogWrite(MOTOR_2, ACCEL);
+  analogWrite(MOTOR_3, ACCEL);
+  analogWrite(MOTOR_4, ACCEL);
+}
+
 void setup() {
   int state = 0;
   Serial.begin(9600);
@@ -143,89 +164,48 @@ long int cpt = 0; //this is a counter
 
 void loop() {
   int state = 0;
-  while (1) {
-    // _______________
-    // ::: Counter :::
+  bool val = 5;
 
-    // Display data counter
-    Serial.print (cpt++, DEC);
-    Serial.print ("\t");
-
-
-    // ____________________________________
-    // :::  accelerometer and gyroscope :::
-
-    // Read accelerometer and gyroscope
-    uint8_t Buf[14];
-    I2Cread(MPU9250_ADDRESS, 0x3B, 14, Buf);
-    // Create 16 bits values from 8 bits data
-
-    // Accelerometer
-    int16_t ax = -(Buf[0] << 8 | Buf[1]);
-    int16_t ay = -(Buf[2] << 8 | Buf[3]);
-    int16_t az = Buf[4] << 8 | Buf[5];
-
-    // Gyroscope
-    int16_t gx = -(Buf[8] << 8 | Buf[9]);
-    int16_t gy = -(Buf[10] << 8 | Buf[11]);
-    int16_t gz = Buf[12] << 8 | Buf[13];
-
-    // Display values
-
-    // Accelerometer
-    Serial.print (ax, DEC);
-    Serial.print ("\t");
-    Serial.print (ay, DEC);
-    Serial.print ("\t");
-    Serial.print (az, DEC);
-    Serial.print ("\t");
-
-    // Gyroscope
-    Serial.print (gx, DEC);
-    Serial.print ("\t");
-    Serial.print (gy, DEC);
-    Serial.print ("\t");
-    Serial.print (gz, DEC);
-    Serial.print ("\t");
-
-
-    // End of line
-    Serial.println("");
-    Serial.println(state);
-    ///////////////////////////////////////////////////
-    //MOORE Outputs
-    switch (state) {
-      case ST_INIT:
-        break;
-      case ST_STBL:
-        analogWrite(MOTOR_1, STABL);
-        analogWrite(MOTOR_2, STABL);
-        analogWrite(MOTOR_3, STABL);
-        analogWrite(MOTOR_4, STABL);
-        break;
-      case ST_USTBL:
-        analogWrite(MOTOR_1, ACCEL);
-        analogWrite(MOTOR_2, ACCEL);
-        analogWrite(MOTOR_3, ACCEL);
-        analogWrite(MOTOR_4, ACCEL);
-        break;
-    }
-
-    //MEALY outputs
-    switch (state) {
-      case ST_INIT:
-        if (!(ACCEL_X_WITHIN_THRESH)) state = ST_USTBL;
-        else if (ACCEL_X_WITHIN_THRESH) state = ST_STBL;
-        break;
-      //--------------------------------------
-      case ST_STBL:
-        if (!(ACCEL_X_WITHIN_THRESH) || !(ACCEL_Y_WITHIN_THRESH) || !(ACCEL_Z_WITHIN_THRESH)) state = ST_USTBL;
-        break;
-      //--------------------------------------
-      case ST_USTBL:
-        if ((ACCEL_X_WITHIN_THRESH) && (ACCEL_Y_WITHIN_THRESH) && (ACCEL_Z_WITHIN_THRESH)) state = ST_STBL;
-        break;
-    }
-    ///////////////////////////////////////////////////
+  update_IMU_data(&ax, &ay, &az, &gx, &gy, &gz);
+  val = is_stable(&ax, &ay, &az, &gx, &gy, &gz);
+  if (!val)
+  {
+    Serial.println(val);
+    self_correct(&ax, &ay, &az, &gx, &gy, &gz);
   }
+
+  //  // MOORE Outputs
+  //  switch (state) {
+  //    case ST_INIT:
+  //      break;
+  //    case ST_STBL:
+  //      analogWrite(MOTOR_1, STABL);
+  //      analogWrite(MOTOR_2, STABL);
+  //      analogWrite(MOTOR_3, STABL);
+  //      analogWrite(MOTOR_4, STABL);
+  //      break;
+  //    case ST_USTBL:
+  //      analogWrite(MOTOR_1, ACCEL);
+  //      analogWrite(MOTOR_2, ACCEL);
+  //      analogWrite(MOTOR_3, ACCEL);
+  //      analogWrite(MOTOR_4, ACCEL);
+  //      break;
+  //  }
+  //
+  //  //MEALY outputs
+  //  switch (state) {
+  //    case ST_INIT:
+  //      if (!(ACCEL_X_WITHIN_THRESH)) state = ST_USTBL;
+  //      else if (ACCEL_X_WITHIN_THRESH) state = ST_STBL;
+  //      break;
+  //    //--------------------------------------
+  //    case ST_STBL:
+  //      if (!(ACCEL_X_WITHIN_THRESH) || !(ACCEL_Y_WITHIN_THRESH) || !(ACCEL_Z_WITHIN_THRESH)) state = ST_USTBL;
+  //      break;
+  //    //--------------------------------------
+  //    case ST_USTBL:
+  //      if ((ACCEL_X_WITHIN_THRESH) && (ACCEL_Y_WITHIN_THRESH) && (ACCEL_Z_WITHIN_THRESH)) state = ST_STBL;
+  //      break;
+  //  }
 }
+
