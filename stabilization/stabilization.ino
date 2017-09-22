@@ -6,9 +6,9 @@
 #define MOTOR_4 11 //Arduino PWM pin
 
 //Motor Speeds
-#define ACCEL 255
-#define STABL 0
-#define DECEL 10
+#define HIGH_SPEED 255
+#define HOVER_SPEED 0
+#define LOW_SPEED 1
 
 //Slave Addresses
 #define MPU9250_ADDRESS 0x68
@@ -37,7 +37,7 @@
 #define GZ_MAX 100
 #define GZ_MIN -100
 
-//Accelerometer Tolerance Thresholds
+//HIGH_SPEEDerometer Tolerance Thresholds
 #define AX_MAX (ACC_REST_VAL_X+BUFFER)//-65
 #define AX_MIN (ACC_REST_VAL_X-BUFFER)//-665
 #define AY_MAX (ACC_REST_VAL_Y+BUFFER)//222
@@ -46,9 +46,9 @@
 #define AZ_MIN (ACC_REST_VAL_Z-BUFFER)//1080
 
 //Shortcuts
-#define ACCEL_X_WITHIN_THRESH (*ax<AX_MAX&&*ax>AX_MIN)
-#define ACCEL_Y_WITHIN_THRESH (*ay<AY_MAX&&*ay>AY_MIN)
-#define ACCEL_Z_WITHIN_THRESH (*az<AZ_MAX&&*az>AZ_MIN)
+#define HIGH_SPEED_X_WITHIN_THRESH (*ax<AX_MAX&&*ax>AX_MIN)
+#define HIGH_SPEED_Y_WITHIN_THRESH (*ay<AY_MAX&&*ay>AY_MIN)
+#define HIGH_SPEED_Z_WITHIN_THRESH (*az<AZ_MAX&&*az>AZ_MIN)
 #define GYRO_X_WITHIN_THRESH (gx<GX_MAX&&gx>GX_MIN)
 #define GYRO_Y_WITHIN_THRESH (gy<GY_MAX&&gy>GY_MIN)
 #define GYRO_X_WITHIN_THRESH (gz<GZ_MAX&&gz>GZ_MIN)
@@ -99,7 +99,7 @@ void update_IMU_data(int16_t *ax, int16_t *ay, int16_t *az, int16_t *gx, int16_t
 {
   uint8_t Buf[14];
   I2Cread(MPU9250_ADDRESS, 0x3B, 14, Buf);
-  // Accelerometer
+  // HIGH_SPEEDerometer
   *ax = -(Buf[0] << 8 | Buf[1]);
   *ay = -(Buf[2] << 8 | Buf[3]);
   *az = Buf[4] << 8 | Buf[5];
@@ -109,7 +109,7 @@ void update_IMU_data(int16_t *ax, int16_t *ay, int16_t *az, int16_t *gx, int16_t
   *gy = -(Buf[10] << 8 | Buf[11]);
   *gz = Buf[12] << 8 | Buf[13];
 
-  // Accelerometer
+  // HIGH_SPEEDerometer
   Serial.print (*ax, DEC);
   Serial.print ("\t");
   Serial.print (*ay, DEC);
@@ -126,14 +126,14 @@ void update_IMU_data(int16_t *ax, int16_t *ay, int16_t *az, int16_t *gx, int16_t
   Serial.println("");
 }
 
-bool is_stable(int16_t *ax, int16_t *ay, int16_t *az, int16_t *gx, int16_t *gy, int16_t *gz)
+bool is_HOVER_SPEEDe(int16_t *ax, int16_t *ay, int16_t *az, int16_t *gx, int16_t *gy, int16_t *gz)
 {
   if (((*ax < AX_MAX) && (*ax > AX_MIN)) && ((*ay < AY_MAX) && (*ay > AY_MIN)) && ((*az < AZ_MAX) && (*az > AZ_MIN)))
   {
-    analogWrite(MOTOR_1, STABL);
-    analogWrite(MOTOR_2, STABL);
-    analogWrite(MOTOR_3, STABL);
-    analogWrite(MOTOR_4, STABL);
+    analogWrite(MOTOR_1, HOVER_SPEED);
+    analogWrite(MOTOR_2, HOVER_SPEED);
+    analogWrite(MOTOR_3, HOVER_SPEED);
+    analogWrite(MOTOR_4, HOVER_SPEED);
     return true;
   }
   else return false;
@@ -176,40 +176,62 @@ void self_correct(int16_t *ax, int16_t *ay, int16_t *az, int16_t *gx, int16_t *g
 
   switch (*ax) {
     case OVER_POSITIVE:
-      analogWrite(MOTOR_1, ACCEL);
-      analogWrite(MOTOR_2, ACCEL);
-      analogWrite(MOTOR_3, DECEL);
-      analogWrite(MOTOR_4, DECEL);
+      analogWrite(MOTOR_1, HIGH_SPEED);
+      analogWrite(MOTOR_2, HIGH_SPEED);
+      analogWrite(MOTOR_3, LOW_SPEED);
+      analogWrite(MOTOR_4, LOW_SPEED);
       break;
     case OVER_NEGATIVE:
-      analogWrite(MOTOR_1, DECEL);
-      analogWrite(MOTOR_2, DECEL);
-      analogWrite(MOTOR_3, ACCEL);
-      analogWrite(MOTOR_4, ACCEL);
+      analogWrite(MOTOR_1, LOW_SPEED);
+      analogWrite(MOTOR_2, LOW_SPEED);
+      analogWrite(MOTOR_3, HIGH_SPEED);
+      analogWrite(MOTOR_4, HIGH_SPEED);
       break;
     default:
       break;
   }
   switch (*ay) {
     case OVER_POSITIVE:
-      analogWrite(MOTOR_1, ACCEL);
-      analogWrite(MOTOR_2, DECEL);
-      analogWrite(MOTOR_3, DECEL);
-      analogWrite(MOTOR_4, ACCEL);
+      analogWrite(MOTOR_1, HIGH_SPEED);
+      analogWrite(MOTOR_2, LOW_SPEED);
+      analogWrite(MOTOR_3, LOW_SPEED);
+      analogWrite(MOTOR_4, HIGH_SPEED);
       break;
     case OVER_NEGATIVE:
-      analogWrite(MOTOR_1, DECEL);
-      analogWrite(MOTOR_2, ACCEL);
-      analogWrite(MOTOR_3, ACCEL);
-      analogWrite(MOTOR_4, DECEL);
+      analogWrite(MOTOR_1, LOW_SPEED);
+      analogWrite(MOTOR_2, HIGH_SPEED);
+      analogWrite(MOTOR_3, HIGH_SPEED);
+      analogWrite(MOTOR_4, LOW_SPEED);
       break;
     default:
       break;
   }
-  //  analogWrite(MOTOR_1, ACCEL);
-  //  analogWrite(MOTOR_2, ACCEL);
-  //  analogWrite(MOTOR_3, ACCEL);
-  //  analogWrite(MOTOR_4, ACCEL);
+  if (*ax && *ay) {
+    if (*ax == 1 & *ay == 1) {
+      analogWrite(MOTOR_1, HIGH_SPEED);
+      analogWrite(MOTOR_2, LOW_SPEED);
+      analogWrite(MOTOR_3, LOW_SPEED);
+      analogWrite(MOTOR_4, LOW_SPEED);
+    }
+    else if (*ax == 1 & *ay == -1) {
+      analogWrite(MOTOR_1, LOW_SPEED);
+      analogWrite(MOTOR_2, HIGH_SPEED);
+      analogWrite(MOTOR_3, LOW_SPEED);
+      analogWrite(MOTOR_4, LOW_SPEED);
+    }
+    else if (*ax == -1 & *ay == -1) {
+      analogWrite(MOTOR_1, LOW_SPEED);
+      analogWrite(MOTOR_2, LOW_SPEED);
+      analogWrite(MOTOR_3, HIGH_SPEED);
+      analogWrite(MOTOR_4, LOW_SPEED);
+    }
+    else if (*ax == -1 & *ay == 1) {
+      analogWrite(MOTOR_1, LOW_SPEED);
+      analogWrite(MOTOR_2, LOW_SPEED);
+      analogWrite(MOTOR_3, LOW_SPEED);
+      analogWrite(MOTOR_4, HIGH_SPEED);
+    }
+  }
 }
 
 void setup() {
@@ -219,7 +241,7 @@ void setup() {
 
   // Configure gyroscope range
   I2CwriteByte(MPU9250_ADDRESS, 27, GYRO_FULL_SCALE_2000_DPS);
-  // Configure accelerometers range
+  // Configure HIGH_SPEEDerometers range
   I2CwriteByte(MPU9250_ADDRESS, 28, ACC_FULL_SCALE_16_G);
   // Set by pass mode for the magnetometers
   I2CwriteByte(MPU9250_ADDRESS, 0x37, 0x02);
@@ -231,24 +253,24 @@ void setup() {
 
 
   ///////////////
-  analogWrite(MOTOR_1, ACCEL);
+  analogWrite(MOTOR_1, HIGH_SPEED);
   delay(500);
-  analogWrite(MOTOR_1, STABL);
-  delay(500);
-
-  analogWrite(MOTOR_2, ACCEL);
-  delay(500);
-  analogWrite(MOTOR_2, STABL);
+  analogWrite(MOTOR_1, HOVER_SPEED);
   delay(500);
 
-  analogWrite(MOTOR_3, ACCEL);
+  analogWrite(MOTOR_2, HIGH_SPEED);
   delay(500);
-  analogWrite(MOTOR_3, STABL);
+  analogWrite(MOTOR_2, HOVER_SPEED);
   delay(500);
 
-  analogWrite(MOTOR_4, ACCEL);
+  analogWrite(MOTOR_3, HIGH_SPEED);
   delay(500);
-  analogWrite(MOTOR_4, STABL);
+  analogWrite(MOTOR_3, HOVER_SPEED);
+  delay(500);
+
+  analogWrite(MOTOR_4, HIGH_SPEED);
+  delay(500);
+  analogWrite(MOTOR_4, HOVER_SPEED);
   delay(500);
   ///////////////
 }
@@ -260,7 +282,7 @@ void loop() {
   bool val = 5;
 
   update_IMU_data(&ax, &ay, &az, &gx, &gy, &gz);
-  if (!(is_stable(&ax, &ay, &az, &gx, &gy, &gz)))
+  if (!(is_HOVER_SPEEDe(&ax, &ay, &az, &gx, &gy, &gz)))
   {
     self_correct(&ax, &ay, &az, &gx, &gy, &gz);
   }
@@ -270,32 +292,32 @@ void loop() {
   //    case ST_INIT:
   //      break;
   //    case ST_STBL:
-  //      analogWrite(MOTOR_1, STABL);
-  //      analogWrite(MOTOR_2, STABL);
-  //      analogWrite(MOTOR_3, STABL);
-  //      analogWrite(MOTOR_4, STABL);
+  //      analogWrite(MOTOR_1, HOVER_SPEED);
+  //      analogWrite(MOTOR_2, HOVER_SPEED);
+  //      analogWrite(MOTOR_3, HOVER_SPEED);
+  //      analogWrite(MOTOR_4, HOVER_SPEED);
   //      break;
   //    case ST_USTBL:
-  //      analogWrite(MOTOR_1, ACCEL);
-  //      analogWrite(MOTOR_2, ACCEL);
-  //      analogWrite(MOTOR_3, ACCEL);
-  //      analogWrite(MOTOR_4, ACCEL);
+  //      analogWrite(MOTOR_1, HIGH_SPEED);
+  //      analogWrite(MOTOR_2, HIGH_SPEED);
+  //      analogWrite(MOTOR_3, HIGH_SPEED);
+  //      analogWrite(MOTOR_4, HIGH_SPEED);
   //      break;
   //  }
   //
   //  //MEALY outputs
   //  switch (state) {
   //    case ST_INIT:
-  //      if (!(ACCEL_X_WITHIN_THRESH)) state = ST_USTBL;
-  //      else if (ACCEL_X_WITHIN_THRESH) state = ST_STBL;
+  //      if (!(HIGH_SPEED_X_WITHIN_THRESH)) state = ST_USTBL;
+  //      else if (HIGH_SPEED_X_WITHIN_THRESH) state = ST_STBL;
   //      break;
   //    //--------------------------------------
   //    case ST_STBL:
-  //      if (!(ACCEL_X_WITHIN_THRESH) || !(ACCEL_Y_WITHIN_THRESH) || !(ACCEL_Z_WITHIN_THRESH)) state = ST_USTBL;
+  //      if (!(HIGH_SPEED_X_WITHIN_THRESH) || !(HIGH_SPEED_Y_WITHIN_THRESH) || !(HIGH_SPEED_Z_WITHIN_THRESH)) state = ST_USTBL;
   //      break;
   //    //--------------------------------------
   //    case ST_USTBL:
-  //      if ((ACCEL_X_WITHIN_THRESH) && (ACCEL_Y_WITHIN_THRESH) && (ACCEL_Z_WITHIN_THRESH)) state = ST_STBL;
+  //      if ((HIGH_SPEED_X_WITHIN_THRESH) && (HIGH_SPEED_Y_WITHIN_THRESH) && (HIGH_SPEED_Z_WITHIN_THRESH)) state = ST_STBL;
   //      break;
   //  }
 }
