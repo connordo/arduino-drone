@@ -71,6 +71,20 @@ int16_t gx;
 int16_t gy;
 int16_t gz;
 
+/*---I2Cread---
+   @description:
+   reads a specific register from a designated slave address. Can fill a
+   buffer of Nbytes size.
+
+   @parameters:
+   uint8_t Address: the slave address (hex)
+   uint8_t Register: The register to be read on the slave
+   uint8_t Nbytes: the number of bytes in the buffer.
+   uint8_t* Data: pointer to an array of buffers
+
+   @return:
+   void
+*/
 void I2Cread(uint8_t Address, uint8_t Register, uint8_t Nbytes, uint8_t* Data)
 {
   // Set register address
@@ -85,7 +99,19 @@ void I2Cread(uint8_t Address, uint8_t Register, uint8_t Nbytes, uint8_t* Data)
     Data[index++] = Wire.read();
 }
 
-// Write a byte (Data) in device (Address) at register (Register)
+
+/*---I2CwriteByte---
+   @description:
+   Writes a byte of data over i2c to the designated register on the chosen slave.
+
+   @parameters:
+   uint8_t Address: the slave address being written to
+   uint8_t Register: the register on the slave being written to
+   uint8_t Data: the byte to be written
+
+   @return:
+   void
+*/
 void I2CwriteByte(uint8_t Address, uint8_t Register, uint8_t Data)
 {
   // Set register address
@@ -95,6 +121,23 @@ void I2CwriteByte(uint8_t Address, uint8_t Register, uint8_t Data)
   Wire.endTransmission();
 }
 
+/*---update_IMU_data---
+   @description:
+   This function updates the six datapoints of the IMU. It reads the 12 registers on the IMU
+   corresponding to the accelerometer and gyroscope. Then, it compiles the 12 numbers into the
+   six values and returns them.
+
+   @parameters:
+   int16_t* ax: X-axis of the accelerometer. Passed by reference
+   int16_t* ay: Y-axis of the accelerometer. Passed by reference
+   int16_t* az: Z-axis of the accelerometer. Passed by reference
+   int16_t* gx: x-axis of the gyroscope. Passed by reference
+   int16_t* gy: Y-axis of the gyroscope. Passed by reference
+   int16_t* gz: z-axis of the gyroscope. Passed by reference
+
+   @return:
+   void
+*/
 void update_IMU_data(int16_t *ax, int16_t *ay, int16_t *az, int16_t *gx, int16_t *gy, int16_t *gz)
 {
   uint8_t Buf[14];
@@ -126,7 +169,22 @@ void update_IMU_data(int16_t *ax, int16_t *ay, int16_t *az, int16_t *gx, int16_t
   Serial.println("");
 }
 
-bool is_HOVER_SPEEDe(int16_t *ax, int16_t *ay, int16_t *az, int16_t *gx, int16_t *gy, int16_t *gz)
+/*---is_stable---
+   @description:
+   A simple function to check whether or not the IMU is stable.
+
+   @parameters:
+   int16_t* ax: X-axis of the accelerometer. Passed by reference
+   int16_t* ay: Y-axis of the accelerometer. Passed by reference
+   int16_t* az: Z-axis of the accelerometer. Passed by reference
+   int16_t* gx: x-axis of the gyroscope. Passed by reference
+   int16_t* gy: Y-axis of the gyroscope. Passed by reference
+   int16_t* gz: z-axis of the gyroscope. Passed by reference
+
+   @return:
+   true if stable, false otherwise.
+*/
+bool is_stable(int16_t *ax, int16_t *ay, int16_t *az, int16_t *gx, int16_t *gy, int16_t *gz)
 {
   if (((*ax < AX_MAX) && (*ax > AX_MIN)) && ((*ay < AY_MAX) && (*ay > AY_MIN)) && ((*az < AZ_MAX) && (*az > AZ_MIN)))
   {
@@ -139,6 +197,22 @@ bool is_HOVER_SPEEDe(int16_t *ax, int16_t *ay, int16_t *az, int16_t *gx, int16_t
   else return false;
 }
 
+/*---self_correct---
+   @description:
+   checks the IMU data passed in and determines which motors need to be sped up to correct and
+   stabilize the board.
+
+   @parameters:
+   int16_t* ax: X-axis of the accelerometer. Passed by reference ...but does it need to be?? I don't think so.
+   int16_t* ay: Y-axis of the accelerometer. Passed by reference
+   int16_t* az: Z-axis of the accelerometer. Passed by reference
+   int16_t* gx: x-axis of the gyroscope. Passed by reference
+   int16_t* gy: Y-axis of the gyroscope. Passed by reference
+   int16_t* gz: z-axis of the gyroscope. Passed by reference
+
+   @return:
+   void
+*/
 void self_correct(int16_t *ax, int16_t *ay, int16_t *az, int16_t *gx, int16_t *gy, int16_t *gz)
 {
   //-----Check the X-axis-----
@@ -282,7 +356,7 @@ void loop() {
   bool val = 5;
 
   update_IMU_data(&ax, &ay, &az, &gx, &gy, &gz);
-  if (!(is_HOVER_SPEEDe(&ax, &ay, &az, &gx, &gy, &gz)))
+  if (!(is_stable(&ax, &ay, &az, &gx, &gy, &gz)))
   {
     self_correct(&ax, &ay, &az, &gx, &gy, &gz);
   }
