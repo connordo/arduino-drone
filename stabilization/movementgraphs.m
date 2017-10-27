@@ -1,12 +1,12 @@
-movement = csvread('movement.csv');
-samples = movement(:,1);
-accel_x = movement(:,2);
-accel_y = movement(:,3);
-accel_z = movement(:,4);
-gyro_x = movement(:,5);
-gyro_y = movement(:,6);
-gyro_z = movement(:,7);
-
+movement = csvread('movement.csv',6,0);
+samples = [0:1233];
+accel_x = movement(:,1);
+accel_y = movement(:,2);
+accel_z = movement(:,3);
+gyro_x = movement(:,4);
+gyro_y = movement(:,5);
+gyro_z = movement(:,6);
+lim = 1250 %change this value
 figure(1);
 subplot(2,1,1);
 plot(samples, gyro_x, '-');
@@ -17,6 +17,8 @@ legend('X-axis','Y-axis','Z-axis');
 title("Gyroscope");
 xlabel("Sample");
 hold off;
+axis tight;
+%xlim([0 lim]);
 
 subplot(2,1,2);
 plot(samples, accel_x, '-');
@@ -27,3 +29,5 @@ legend('X-axis','Y-axis','Z-axis');
 title("Accelerometer");
 xlabel("Sample");
 hold off;
+axis tight;
+%xlim([0 lim]);
