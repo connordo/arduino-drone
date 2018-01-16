@@ -1,0 +1,28 @@
+Circuit: * C:\Users\conno\OneDrive\Documents\arduino-drone\ESC\esc_circuit_v2.asc
+
+Limiting rise time of source v1 to 0.01
+Limiting fall time of source v1 to 0.01
+Direct Newton iteration for .op point succeeded.
+Semiconductor Device Operating Points:
+                        --- MOSFET Transistors ---
+Name:          m1
+Model:        pmos
+Id:          5.62e-03
+Vgs:        -2.80e+00
+Vds:         7.00e-01
+Vbs:         0.00e+00
+Vth:        -0.00e+00
+Vdsat:      -3.50e+00
+Gm:          1.40e-05
+Gds:         5.60e-05
+Gmb:         0.00e+00
+Cbd:         0.00e+00
+Cbs:         0.00e+00
+Cgsov:       0.00e+00
+Cgdov:       0.00e+00
+Cgbov:       0.00e+00
+Cgs:         0.00e+00
+Cgd:         0.00e+00
+Cgb:         0.00e+00
+
+

@@ -49,9 +49,9 @@ accel_x = accel_x - mean(accel_x(1:100));
 accel_y = accel_y - mean(accel_y(1:100));
 accel_z = accel_z - mean(accel_z(330:460));
 
-accel_x = accel_x * 16 * 9.8 * 000029; %I think I just found my scaling factor
-accel_y = accel_y * 16 * 9.8 * 000029;
-accel_z = accel_z * 16 * 9.8 * 000029;
+accel_x = accel_x * 16 * 9.8 * .000029; %I think I just found my scaling factor
+accel_y = accel_y * 16 * 9.8 * .000029;
+accel_z = accel_z * 16 * 9.8 * .000029;
 
 plot(samples, accel_x, '-', samples, accel_y, '-', samples, accel_z, '-');
 axis tight;
