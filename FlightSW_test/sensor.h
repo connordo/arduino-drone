@@ -16,8 +16,8 @@ class sensor {
 
   public:
     sensor();
-    int imuTest();
-    int altTest();
+    bool imuTest();
+    bool altTest();
     int updateTelemetry();
     void I2Cread(uint8_t Address, uint8_t Register, uint8_t Nbytes, uint8_t* Data);
     void I2CwriteByte(uint8_t Address, uint8_t Register, uint8_t Data);
