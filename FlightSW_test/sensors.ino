@@ -20,8 +20,8 @@
 #define    ACC_FULL_SCALE_16_G        0x18
 
 // Address locations for the ALT
-#define    ALT_WHO_AM_I               0x0c //returns 0xc4 if successful
-#define    ALT_WAI_RET_VAL            0xc4
+#define    ALT_WHO_AM_I               0x0C //returns 0xc4 if successful
+#define    ALT_WAI_RET_VAL            0xC4
 
 
 /*sensors_check_imu
@@ -53,11 +53,14 @@ int sensors_check_alt() {
   uint8_t return_value = 0;
   I2Cread(MPL3115A2_ADDRESS, ALT_WHO_AM_I, 1, &return_value);
   if (return_value == ALT_WAI_RET_VAL) {
-    if (DBG) Serial.println("ALTIMETER is online");
+    if (DBG) Serial.println("ALT is online");
     return 0;
   }
   else {
-    if (DBG) Serial.println("ALTIMETER is OFFLINE");
+    if (DBG) Serial.println("ALT is OFFLINE");
+    if (DBG) Serial.print(return_value);
+    if (DBG) Serial.println(" Was returned");
+
     return false;
   }
 }
@@ -75,7 +78,7 @@ int sensors_init() {
   I2CwriteByte(MPU9250_ADDRESS, 0x37, 0x02); //set the bypass bit
   int imu_ret = sensors_check_imu();
   int alt_ret = sensors_check_alt();
-  if (imu_ret || alt_ret)
+  if (!imu_ret && !alt_ret)
     return -1;
   else return 0;
 }

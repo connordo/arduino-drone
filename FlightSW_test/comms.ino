@@ -1,9 +1,6 @@
 #include <SoftwareSerial.h>
 
-#define TX_D 8 //These are subject to change
-#define RX_D 7 //These are subject to change
-
-int comms_init(){
-  SoftwareSerial bluetooth(RX_D, TX_D);
-  bluetooth.begin(9600);
+void print() {
+  bluetooth.println("This is a test");
 }
+
