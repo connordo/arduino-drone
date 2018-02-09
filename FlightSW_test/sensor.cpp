@@ -1,4 +1,5 @@
-#include <Wire.h>
+#include "sensor.h"
+
 
 //Slave Addresses
 #define    MPU9250_ADDRESS            0x68
@@ -24,61 +25,93 @@
 #define    ALT_WAI_RET_VAL            0xC4
 
 
-/*sensors_check_imu
+sensor::sensor() {
+  accel_x = 0;
+  accel_y = 0;
+  accel_z = 0;
+  gyro_x = 0;
+  gyro_y = 0;
+  gyro_z = 0;
+  altitude = 0;
+
+}
+
+/* imuTest
   @description: initializes the imu. Checks the WHO_AM_I register
   to verify a secure i2c connection.
 
   @return: 0 if successful. nonzero otherwise.
 */
-int sensors_check_imu() {
+int sensor::imuTest() {
   uint8_t return_value = 0;
   I2Cread(MPU9250_ADDRESS, MPU_WHO_AM_I, 1, &return_value);
   if (return_value == MPU_WAI_RET_VAL) {
-    if (DBG) Serial.println("IMU is online");
     return 0;
   }
   else {
-    if (DBG) Serial.println("IMU is OFFLINE");
-    return false;
+    return -1;
   }
 }
 
-/*sensors_check_alt
+/* altTest
   @description: initializes the imu. Checks the WHO_AM_I register
   to verify a secure i2c connection.
 
   @return: 0 if successful. nonzero otherwise.
 */
-int sensors_check_alt() {
+int sensor::altTest() {
   uint8_t return_value = 0;
   I2Cread(MPL3115A2_ADDRESS, ALT_WHO_AM_I, 1, &return_value);
   if (return_value == ALT_WAI_RET_VAL) {
-    if (DBG) Serial.println("ALT is online");
     return 0;
   }
   else {
-    if (DBG) Serial.println("ALT is OFFLINE");
-    if (DBG) Serial.print(return_value);
-    if (DBG) Serial.println(" Was returned");
-
-    return false;
+    return -1;
   }
 }
 
-/*sensors_init
-  @description: initializes the i2c communication and checks the IMU and ALT
-  to ensure proper i2c connection is in place.
+/* updateTelemetry
+  @description: updates the acceleromter, gyroscope, and altitude data.
 
   @return: 0 if successful. nonzero otherwise.
 */
-int sensors_init() {
-  Wire.begin();
-  I2CwriteByte(MPU9250_ADDRESS, 0x1b, GYRO_FULL_SCALE_2000_DPS); //configure the gyroscope
-  I2CwriteByte(MPU9250_ADDRESS, 0x1c, ACC_FULL_SCALE_16_G); //configure the accelerometer
-  I2CwriteByte(MPU9250_ADDRESS, 0x37, 0x02); //set the bypass bit
-  int imu_ret = sensors_check_imu();
-  int alt_ret = sensors_check_alt();
-  if (!imu_ret && !alt_ret)
-    return -1;
-  else return 0;
+int sensor::updateTelemetry() {
+  uint8_t Buf[14];
+  I2Cread(MPU9250_ADDRESS, 0x3B, 14, Buf);
+
+  // Create 16 bits values from 8 bits data
+
+  // Accelerometer
+  accel_x = -(Buf[0] << 8 | Buf[1]);//TODO check the negative values. What's that about? lolz
+  accel_y = -(Buf[2] << 8 | Buf[3]);
+  accel_z = Buf[4] << 8 | Buf[5];
+
+  // Gyroscope
+  gyro_x = -(Buf[8] << 8 | Buf[9]);
+  gyro_y = -(Buf[10] << 8 | Buf[11]);
+  gyro_z = Buf[12] << 8 | Buf[13];
+}
+
+void sensor::I2Cread(uint8_t Address, uint8_t Register, uint8_t Nbytes, uint8_t* Data)
+{
+  // Set register address
+  Wire.beginTransmission(Address);
+  Wire.write(Register);
+  Wire.endTransmission();
+
+  // Read Nbytes
+  Wire.requestFrom(Address, Nbytes);
+  uint8_t index = 0;
+  while (Wire.available())
+    Data[index++] = Wire.read();
+}
+
+// Write a byte (Data) in device (Address) at register (Register)
+void sensor::I2CwriteByte(uint8_t Address, uint8_t Register, uint8_t Data)
+{
+  // Set register address
+  Wire.beginTransmission(Address);
+  Wire.write(Register);
+  Wire.write(Data);
+  Wire.endTransmission();
 }
