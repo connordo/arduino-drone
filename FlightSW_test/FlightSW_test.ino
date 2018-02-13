@@ -7,15 +7,17 @@
 
 #define DBG 1
 
-SoftwareSerial bluetooth(RX_D, TX_D);
+// SoftwareSerial bluetooth(RX_D, TX_D);
 sensor *bbsensors;
+comms *bbcomms;
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
-  bluetooth.begin(9600);
+  // bluetooth.begin(9600);
   if (DBG) Serial.println("DBG is set to one. Debug Statements will print");
   bbsensors = new sensor();
+  bbcomms = new comms();
   if (DBG) Serial.println("sensor object created");
   if (DBG) {
     Serial.print("IMU CHECK: ");
@@ -24,7 +26,7 @@ void setup() {
     bbsensors->altTest() ? Serial.println("Failed") : Serial.println("Passed");
     //Serial.println(bbsensors->altTest());
   }
-  if(DBG) bluetooth.println("Bluetooth test");
+  // if(DBG) bluetooth.println("Bluetooth test");
 }
 
 void loop() {
@@ -41,7 +43,8 @@ void loop() {
   Serial.print(bbsensors->gyro_z);
   Serial.print("\n");
 
-  delay(100);
+  delay(1000);
   bbsensors->updateTelemetry();
+  Serial.println(char(bbcomms->tick()));
 
 }
