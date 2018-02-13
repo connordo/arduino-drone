@@ -36,7 +36,7 @@ sensor::sensor() {
   Wire.begin();
   I2CwriteByte(MPU9250_ADDRESS, 0x1b, GYRO_FULL_SCALE_2000_DPS); //configure the gyroscope
   I2CwriteByte(MPU9250_ADDRESS, 0x1c, ACC_FULL_SCALE_16_G); //configure the accelerometer
-  I2CwriteByte(MPU9250_ADDRESS, 0x37, 0x02); //set the bypass bit
+  //  I2CwriteByte(MPU9250_ADDRESS, 0x37, 0x02); //set the bypass bit
 }
 
 /* imuTest
@@ -62,7 +62,7 @@ bool sensor::imuTest() {
 
   @return: 0 if successful. nonzero otherwise.
 */
-bool sensor::altTest() {
+bool sensor::altTest() {//TODO fix this function. It's not working proplerly, but the altimeter IS showing up on the bus.
   uint8_t return_value = 0;
   I2Cread(MPL3115A2_ADDRESS, ALT_WHO_AM_I, 1, &return_value);
   if (return_value == ALT_WAI_RET_VAL) {
@@ -81,10 +81,10 @@ bool sensor::altTest() {
 int sensor::updateTelemetry() {
   uint8_t Buf[14] = {0};
   I2Cread(MPU9250_ADDRESS, 0x3B, 14, Buf);
-//uint8_t axh = 0;
-//uint8_t axl = 0;
-//I2Cread(MPU9250_ADDRESS, 0x3B, 1, &axh);
-//I2Cread(MPU9250_ADDRESS, 0x3C, 1, &axl);
+  //uint8_t axh = 0;
+  //uint8_t axl = 0;
+  //I2Cread(MPU9250_ADDRESS, 0x3B, 1, &axh);
+  //I2Cread(MPU9250_ADDRESS, 0x3C, 1, &axl);
 
   // Create 16 bits values from 8 bits data
 
