@@ -1,5 +1,6 @@
 #include <SoftwareSerial.h>
 #include "sensor.h"
+#include "comms.h"
 
 #define TX_D 8 //These are subject to change
 #define RX_D 7 //These are subject to change
@@ -12,17 +13,18 @@ sensor *bbsensors;
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
-
+  bluetooth.begin(9600);
   if (DBG) Serial.println("DBG is set to one. Debug Statements will print");
   bbsensors = new sensor();
   if (DBG) Serial.println("sensor object created");
   if (DBG) {
     Serial.print("IMU CHECK: ");
-    bbsensors->imuTest() ? Serial.println("Failed") : Serial.println("passed");
+    bbsensors->imuTest() ? Serial.println("Failed") : Serial.println("Passed");
     Serial.print("ALTIMETER value: ");
-    bbsensors->altTest() ? Serial.println("Failed") : Serial.println("passed");
+    bbsensors->altTest() ? Serial.println("Failed") : Serial.println("Passed");
     //Serial.println(bbsensors->altTest());
   }
+  if(DBG) bluetooth.println("Bluetooth test");
 }
 
 void loop() {
