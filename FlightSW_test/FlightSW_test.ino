@@ -17,7 +17,7 @@ void setup() {
   bbsensors = new sensor();
   if (DBG) Serial.println("sensor object created");
 
-  bbsensors->imuTest()?Serial.println("passed"):Serial.println("Failed");
+  bbsensors->imuTest()?Serial.println("Failed"):Serial.println("passed");
 }
 
 void loop() {
@@ -34,7 +34,7 @@ void loop() {
   Serial.print(bbsensors->gyro_z);
   Serial.print("\n");
  
-  delay(5000);
+  delay(1000);
   Serial.println(bbsensors->updateTelemetry());
 
 }

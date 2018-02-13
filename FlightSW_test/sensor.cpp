@@ -33,6 +33,7 @@ sensor::sensor() {
   gyro_y = 0;
   gyro_z = 0;
   altitude = 0;
+  Wire.begin();
   I2CwriteByte(MPU9250_ADDRESS, 0x1b, GYRO_FULL_SCALE_2000_DPS); //configure the gyroscope
   I2CwriteByte(MPU9250_ADDRESS, 0x1c, ACC_FULL_SCALE_16_G); //configure the accelerometer
   I2CwriteByte(MPU9250_ADDRESS, 0x37, 0x02); //set the bypass bit
@@ -79,16 +80,16 @@ bool sensor::altTest() {
 */
 int sensor::updateTelemetry() {
   uint8_t Buf[14] = {0};
-//  I2Cread(MPU9250_ADDRESS, 0x3B, 14, Buf);
-uint8_t axh = 0;
-uint8_t axl = 0;
-I2Cread(MPU9250_ADDRESS, 0x3B, 1, &axh);
-I2Cread(MPU9250_ADDRESS, 0x3C, 1, &axl);
+  I2Cread(MPU9250_ADDRESS, 0x3B, 14, Buf);
+//uint8_t axh = 0;
+//uint8_t axl = 0;
+//I2Cread(MPU9250_ADDRESS, 0x3B, 1, &axh);
+//I2Cread(MPU9250_ADDRESS, 0x3C, 1, &axl);
 
   // Create 16 bits values from 8 bits data
 
   // Accelerometer
-  accel_x = -(axh << 8 | axl);//TODO check the negative values. What's that about? lolz
+  accel_x = -(Buf[0] << 8 | Buf[1]);//TODO check the negative values. What's that about? lolz
   accel_y = -(Buf[2] << 8 | Buf[3]);
   accel_z = Buf[4] << 8 | Buf[5];
 
