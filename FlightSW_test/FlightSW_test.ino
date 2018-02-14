@@ -1,4 +1,4 @@
-#include <SoftwareSerial.h>
+#include <QueueArray.h>
 #include "sensor.h"
 #include "comms.h"
 
@@ -10,6 +10,7 @@
 // SoftwareSerial bluetooth(RX_D, TX_D);
 sensor *bbsensors;
 comms *bbcomms;
+QueueArray<char> commands;
 
 void setup() {
   // put your setup code here, to run once:
@@ -30,21 +31,23 @@ void setup() {
 }
 
 void loop() {
-  Serial.print(bbsensors->accel_x);
-  Serial.print("\t");
-  Serial.print(bbsensors->accel_y);
-  Serial.print("\t");
-  Serial.print(bbsensors->accel_z);
-  Serial.print("\t");
-  Serial.print(bbsensors->gyro_x);
-  Serial.print("\t");
-  Serial.print(bbsensors->gyro_y);
-  Serial.print("\t");
-  Serial.print(bbsensors->gyro_z);
-  Serial.print("\n");
-
+  if (DBG) {
+    Serial.print(bbsensors->accel_x);
+    Serial.print("\t");
+    Serial.print(bbsensors->accel_y);
+    Serial.print("\t");
+    Serial.print(bbsensors->accel_z);
+    Serial.print("\t");
+    Serial.print(bbsensors->gyro_x);
+    Serial.print("\t");
+    Serial.print(bbsensors->gyro_y);
+    Serial.print("\t");
+    Serial.print(bbsensors->gyro_z);
+    Serial.print("\n");
+  }
   delay(1000);
   bbsensors->updateTelemetry();
-  Serial.println(char(bbcomms->tick()));
+  int8_t cmd = bbcomms->tick();
+  if (cmd) commands.push(char(cmd));
 
 }
