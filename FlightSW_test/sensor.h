@@ -19,7 +19,7 @@ class sensor {
     bool imuTest();
     bool altTest();
     int updateTelemetry();
-    
+
 
 };
 

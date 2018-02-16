@@ -7,17 +7,17 @@
 
 class attitude {
   public:
-    motor m1;
-    motor m2;
-    motor m3;
-    motor m4;
+    motor *m1;
+    motor *m2;
+    motor *m3;
+    motor *m4;
     int position_x;
     int position_y;
     int integral_x;
     int integral_y;
     int derivative_x;
     int derivative_y;
-    sensor data;
+    sensor *data;
 
     attitude();
     void pid();

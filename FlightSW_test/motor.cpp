@@ -1,4 +1,5 @@
 #include "motor.h"
+#include "Arduino.h"
 
 motor::motor(int pinIDNum) {
   ID = pinIDNum;

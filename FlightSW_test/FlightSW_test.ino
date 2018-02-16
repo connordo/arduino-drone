@@ -48,6 +48,6 @@ void loop() {
   delay(1000);
   bbsensors->updateTelemetry();
   int8_t cmd = bbcomms->tick();
-//  if (cmd) commands.push(char(cmd));
+  //  if (cmd) commands.push(char(cmd));
 
 }

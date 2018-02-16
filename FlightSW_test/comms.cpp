@@ -40,5 +40,5 @@ int8_t comms::tick() {
       currentState = wait_for_cmd;
       break;
   }
-return c;
+  return c;
 }

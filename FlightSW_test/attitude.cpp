@@ -1,5 +1,6 @@
 #include "attitude.h"
 #include "sensor.h"
+#include "motor.h"
 
 //              *  *                            *  *
 //           *        *                      *        *
@@ -28,11 +29,11 @@ attitude::attitude() {
   m3 = new motor(9);
   m4 = new motor(10);
   data = new sensor();
-  data.updateTelemetry();
-  position_x = data.accel_x;
-  position_y = data.accel_y;
+  data->updateTelemetry();
+  position_x = data->accel_x;
+  position_y = data->accel_y;
 }
 
-attitude::pid() {
+void attitude::pid() {
   //insert magic here
 }
