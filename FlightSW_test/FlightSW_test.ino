@@ -1,4 +1,4 @@
-#include <QueueArray.h>
+//#include <QueueArray.h>
 #include "sensor.h"
 #include "comms.h"
 
@@ -10,7 +10,7 @@
 // SoftwareSerial bluetooth(RX_D, TX_D);
 sensor *bbsensors;
 comms *bbcomms;
-QueueArray<char> commands;
+//QueueArray<char> commands;
 
 void setup() {
   // put your setup code here, to run once:
@@ -48,6 +48,6 @@ void loop() {
   delay(1000);
   bbsensors->updateTelemetry();
   int8_t cmd = bbcomms->tick();
-  if (cmd) commands.push(char(cmd));
+//  if (cmd) commands.push(char(cmd));
 
 }
