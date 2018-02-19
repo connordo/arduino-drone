@@ -1,6 +1,7 @@
 #include "attitude.h"
 #include "sensor.h"
 #include "motor.h"
+#include "Arduino.h"
 
 //              *  *                            *  *
 //           *        *                      *        *
@@ -23,6 +24,15 @@
 //           *        *                      *        *
 //              *  *                            *  *
 
+
+/* attitude
+  @description: This is a constructor for the attitude. It
+  creates four instances of the motor class to represent the
+  four different motors on the drone. It also creates an
+  instance of sensor, which handles all the telemetry.
+  initial telemetry is set, and the currentState enum of the
+  state machine is initialized to 'off_st'
+*/
 attitude::attitude() {
   m1 = new motor(11);
   m2 = new motor(10);
@@ -32,13 +42,18 @@ attitude::attitude() {
   data->updateTelemetry();
   position_x = data->accel_x;
   position_y = data->accel_y;
+  currentState = off_st;
 }
 
 void attitude::pid() {
   //insert magic here
 }
 
-void attitude::tick(char cmd_in) {
+void attitude::calibrate() {
+
+}
+
+void attitude::tick(uint16_t cmd_in) {
   if (cmd_in) commands.push(cmd_in);
 
   //Moore Outputs
@@ -66,11 +81,9 @@ void attitude::tick(char cmd_in) {
     case off_st:
       if (!commands.isEmpty()) {
         if (commands.peek() == 'a') {
-          commands.pop();
           currentState = init_st;
-        } else {
-          commands.pop();
         }
+        commands.pop();
       }
       break;
     case init_st:
@@ -81,6 +94,7 @@ void attitude::tick(char cmd_in) {
         switch (commands.peek()) {
           case 'd':
             currentState = off_st;
+            commands.pop();
             break;
         }
       }

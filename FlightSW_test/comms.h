@@ -6,7 +6,7 @@
 class comms {
   public:
     SoftwareSerial* bluetooth;
-    enum comm_SM_t {wait_for_cmd, relay_cmd} currentState;
+    enum comm_SM_t {wait_for_cmd_st, relay_cmd_st} currentState;
 
     comms();
     void transmit(String input);

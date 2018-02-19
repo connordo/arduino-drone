@@ -21,9 +21,11 @@ class attitude {
     sensor *data;
     QueueArray<char> commands;
     enum attitude_SM_t {off_st, init_st, ready_st, execute_cmd_st} currentState;
+    int calibration_count;
 
     attitude();
     void pid();
-    void tick(char cmd_in);
+    void calibrate();
+    void tick(uint16_t cmd_in);
 };
 #endif

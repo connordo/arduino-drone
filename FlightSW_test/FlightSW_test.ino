@@ -13,18 +13,18 @@ void setup() {
   Serial.begin(9600);
   // bluetooth.begin(9600);
   if (DBG) Serial.println("DBG is set to one. Debug Statements will print");
+
   bbsensors = new sensor();
-  bbcomms = new comms();
-  bbatt = new attitude();
   if (DBG) Serial.println("sensor object created");
   if (DBG) {
     Serial.print("IMU CHECK: ");
     bbsensors->imuTest() ? Serial.println("Failed") : Serial.println("Passed");
     Serial.print("ALTIMETER value: ");
     bbsensors->altTest() ? Serial.println("Failed") : Serial.println("Passed");
-    //Serial.println(bbsensors->altTest());
   }
-  // if(DBG) bluetooth.println("Bluetooth test");
+  delete bbsensors;
+  bbcomms = new comms();
+  bbatt = new attitude();
 }
 
 void loop() {
@@ -32,8 +32,8 @@ void loop() {
     Serial.print(bbsensors->toString());
   delay(1000);
 
-  //  bbsensors->updateTelemetry();
   int8_t cmd = bbcomms->tick();
-  bbatt->tick((char)cmd);
+  if (cmd) Serial.println((char)cmd);
+  bbatt->tick(cmd);
 
 }

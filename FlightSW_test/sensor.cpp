@@ -1,4 +1,5 @@
 #include "sensor.h"
+#include "Arduino.h"
 
 //Slave Addresses
 #define    MPU9250_ADDRESS            0x68
@@ -85,6 +86,13 @@ sensor::sensor() {
   gyro_y = 0;
   gyro_z = 0;
   altitude = 0;
+  accel_x_bias = 0;
+  accel_y_bias = 0;
+  accel_z_bias = 0;
+  gyro_x_bias = 0;
+  gyro_y_bias = 0;
+  gyro_z_bias = 0;
+
   Wire.begin();
   I2CwriteByte(MPU9250_ADDRESS, 0x1b, GYRO_FULL_SCALE_2000_DPS); //configure the gyroscope
   I2CwriteByte(MPU9250_ADDRESS, 0x1c, ACC_FULL_SCALE_16_G); //configure the accelerometer
@@ -92,8 +100,17 @@ sensor::sensor() {
   I2CwriteByte(MPL3115A2_ADDRESS, CTRL_REG1, 0x04); // Set RST (bit 2) to 1
 }
 
-void sensor::calibrate(){
-  //TODO: do this later.
+void sensor::calibrate() {
+  int accel_x_bias_temp = 0;
+  int accel_y_bias_temp = 0;
+  for (int i = 0; i < 5; i++) {
+    updateTelemetry();
+    accel_x_bias_temp += accel_x;
+    accel_y_bias_temp += accel_y;
+    delay(500);
+  }
+  accel_x_bias += accel_x_bias_temp / 5;
+  accel_y_bias += accel_y_bias_temp / 5;
 }
 
 /* imuTest
@@ -138,15 +155,10 @@ bool sensor::altTest() {//TODO fix this function. It's not working proplerly, bu
 int sensor::updateTelemetry() {
   uint8_t Buf[14] = {0};
   I2Cread(MPU9250_ADDRESS, 0x3B, 14, Buf);
-  //uint8_t axh = 0;
-  //uint8_t axl = 0;
-  //I2Cread(MPU9250_ADDRESS, 0x3B, 1, &axh);
-  //I2Cread(MPU9250_ADDRESS, 0x3C, 1, &axl);
 
   // Create 16 bits values from 8 bits data
-
   // Accelerometer
-  accel_x = -(Buf[0] << 8 | Buf[1]);//TODO check the negative values. What's that about? lolz
+  accel_x = -(Buf[0] << 8 | Buf[1]); //TODO check the negative values. What's that about? lolz
   accel_y = -(Buf[2] << 8 | Buf[3]);
   accel_z = Buf[4] << 8 | Buf[5];
 
@@ -156,6 +168,11 @@ int sensor::updateTelemetry() {
   gyro_z = Buf[12] << 8 | Buf[13];
 }
 
+/* toString
+  @description: packages the telemetry into a string that can be printed
+
+  @return: the String of telemetry data.
+*/
 String sensor::toString() {
   String output;
   output = String(accel_x) + "\t" + String(accel_y) + "\t" + String(accel_z) + "\t" + String(gyro_x) + "\t" + String(gyro_y) + "\t" + String(gyro_z);
