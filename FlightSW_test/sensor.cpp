@@ -92,6 +92,10 @@ sensor::sensor() {
   I2CwriteByte(MPL3115A2_ADDRESS, CTRL_REG1, 0x04); // Set RST (bit 2) to 1
 }
 
+void sensor::calibrate(){
+  //TODO: do this later.
+}
+
 /* imuTest
   @description: initializes the imu. Checks the WHO_AM_I register
   to verify a secure i2c connection.
@@ -150,6 +154,12 @@ int sensor::updateTelemetry() {
   gyro_x = -(Buf[8] << 8 | Buf[9]);
   gyro_y = -(Buf[10] << 8 | Buf[11]);
   gyro_z = Buf[12] << 8 | Buf[13];
+}
+
+String sensor::toString() {
+  String output;
+  output = String(accel_x) + "\t" + String(accel_y) + "\t" + String(accel_z) + "\t" + String(gyro_x) + "\t" + String(gyro_y) + "\t" + String(gyro_z);
+  return output;
 }
 
 void I2Cread(uint8_t Address, uint8_t Register, uint8_t Nbytes, uint8_t* Data)

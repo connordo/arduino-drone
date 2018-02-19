@@ -4,6 +4,7 @@
 #include "attitude.h"
 #include "sensor.h"
 #include "motor.h"
+#include <QueueArray.h>
 
 class attitude {
   public:
@@ -18,8 +19,11 @@ class attitude {
     int derivative_x;
     int derivative_y;
     sensor *data;
+    QueueArray<char> commands;
+    enum attitude_SM_t {off_st, init_st, ready_st, execute_cmd_st} currentState;
 
     attitude();
     void pid();
+    void tick(char cmd_in);
 };
 #endif

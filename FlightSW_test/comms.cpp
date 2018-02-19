@@ -1,8 +1,8 @@
 #include "comms.h"
 
-#define TX_D 8 //These are subject to change
-#define RX_D 7 //These are subject to change
-
+#define TX_D 13 //These are subject to change
+#define RX_D 12 //These are subject to change
+#define DBG 1 //1 for debug statements.
 comms::comms() {
   bluetooth = new SoftwareSerial(RX_D, TX_D);
   bluetooth->begin(9600);
@@ -23,11 +23,11 @@ int8_t comms::tick() {
   //Moore outputs
   switch (currentState) {
     case wait_for_cmd:
-      transmit("wait_for_cmd\n");
+      if (DBG) transmit("wait_for_cmd\n");
       break;
     case relay_cmd:
       c = bluetooth->read();
-      transmit("relay_cmd\n");
+      if (DBG) transmit("relay_cmd\n");
       break;
   }
   //Mealy Outputs

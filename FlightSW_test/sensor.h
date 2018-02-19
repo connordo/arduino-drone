@@ -16,9 +16,11 @@ class sensor {
 
   public:
     sensor();
+    void calibrate();
     bool imuTest();
     bool altTest();
     int updateTelemetry();
+    String toString();
 
 
 };

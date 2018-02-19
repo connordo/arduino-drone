@@ -1,16 +1,12 @@
-//#include <QueueArray.h>
 #include "sensor.h"
 #include "comms.h"
-
-#define TX_D 8 //These are subject to change
-#define RX_D 7 //These are subject to change
+#include "attitude.h"
 
 #define DBG 1
 
-// SoftwareSerial bluetooth(RX_D, TX_D);
 sensor *bbsensors;
 comms *bbcomms;
-//QueueArray<char> commands;
+attitude *bbatt;
 
 void setup() {
   // put your setup code here, to run once:
@@ -19,6 +15,7 @@ void setup() {
   if (DBG) Serial.println("DBG is set to one. Debug Statements will print");
   bbsensors = new sensor();
   bbcomms = new comms();
+  bbatt = new attitude();
   if (DBG) Serial.println("sensor object created");
   if (DBG) {
     Serial.print("IMU CHECK: ");
@@ -31,23 +28,12 @@ void setup() {
 }
 
 void loop() {
-  if (DBG) {
-    Serial.print(bbsensors->accel_x);
-    Serial.print("\t");
-    Serial.print(bbsensors->accel_y);
-    Serial.print("\t");
-    Serial.print(bbsensors->accel_z);
-    Serial.print("\t");
-    Serial.print(bbsensors->gyro_x);
-    Serial.print("\t");
-    Serial.print(bbsensors->gyro_y);
-    Serial.print("\t");
-    Serial.print(bbsensors->gyro_z);
-    Serial.print("\n");
-  }
+  if (DBG)
+    Serial.print(bbsensors->toString());
   delay(1000);
-  bbsensors->updateTelemetry();
+
+  //  bbsensors->updateTelemetry();
   int8_t cmd = bbcomms->tick();
-  //  if (cmd) commands.push(char(cmd));
+  bbatt->tick((char)cmd);
 
 }
