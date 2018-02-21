@@ -3,7 +3,7 @@
 #define TX_D 13
 #define RX_D 12
 
-#define DBG 1 //1 for debug statements.
+#define DBG 0 //1 for debug statements.
 
 /* comms
   @description: This is a constructor for the communications
@@ -14,7 +14,9 @@
 comms::comms() {
   bluetooth = new SoftwareSerial(RX_D, TX_D);
   bluetooth->begin(9600);
-  bluetooth->println("Bluetooth test!!!!!!");
+  transmit("Communications Enabled!\n");
+  transmit("Command Key:\n");
+  transmit("'a' = arm\t'd' = disarm\t'u' = up");
   currentState = wait_for_cmd_st;
 }
 

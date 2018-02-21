@@ -43,6 +43,8 @@ attitude::attitude() {
   position_x = data->accel_x;
   position_y = data->accel_y;
   currentState = off_st;
+  Serial.begin(9600); //probably won't be called in the final version of the code
+
 }
 
 void attitude::pid() {
@@ -52,7 +54,15 @@ void attitude::pid() {
 void attitude::calibrate() {
 
 }
+/* tick
+    @description: this function acts as the state machine for the attitude
+    control. It calls the sensor->updateTelemetry() to *hopefully
+    maintain a balance. :)
 
+    @param cmd_in: a uint16_t passed in from main, received from the comms
+    state machine. Represents a command to be executed. Will probably
+    be 0 during most function calls.
+*/
 void attitude::tick(uint16_t cmd_in) {
   if (cmd_in) commands.push(cmd_in);
 
@@ -66,7 +76,7 @@ void attitude::tick(uint16_t cmd_in) {
       m2->arm();
       m3->arm();
       m4->arm();
-      data->calibrate();
+      data->calibrate(); //This, unfortunetly, Takes about 2.5 seconds
       break;
     case ready_st:
 
@@ -82,20 +92,37 @@ void attitude::tick(uint16_t cmd_in) {
       if (!commands.isEmpty()) {
         if (commands.peek() == 'a') {
           currentState = init_st;
+          Serial.println("STATE: init_st");
         }
         commands.pop();
       }
       break;
     case init_st:
       currentState = ready_st;
+      Serial.println("STATE: ready_st");
+
       break;
     case ready_st:
       if (!commands.isEmpty()) {
         switch (commands.peek()) {
           case 'd':
+            m1->disarm();
+            m2->disarm();
+            m3->disarm();
+            m4->disarm();
             currentState = off_st;
+            Serial.println("STATE: off_st");
             commands.pop();
             break;
+          case 'u':
+            m1->changeSpeed(255);
+            m2->changeSpeed(255);
+            m3->changeSpeed(255);
+            m4->changeSpeed(255);
+            commands.pop();
+            break;
+          default:
+            commands.pop();
         }
       }
       break;

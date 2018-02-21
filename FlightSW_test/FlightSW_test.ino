@@ -28,9 +28,8 @@ void setup() {
 }
 
 void loop() {
-  if (DBG)
-    Serial.print(bbsensors->toString());
-  delay(1000);
+  //  if (DBG) Serial.println(bbsensors->toString());
+  //  delay(1000);
 
   int8_t cmd = bbcomms->tick();
   if (cmd) Serial.println((char)cmd);
