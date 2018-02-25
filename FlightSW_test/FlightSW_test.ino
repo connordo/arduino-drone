@@ -34,5 +34,4 @@ void loop() {
   int8_t cmd = bbcomms->tick();
   if (cmd) Serial.println((char)cmd);
   bbatt->tick(cmd);
-
 }
