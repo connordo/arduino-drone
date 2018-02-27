@@ -1,5 +1,6 @@
 #include "sensor.h"
 #include "Arduino.h"
+#define DBG 1
 
 //Slave Addresses
 #define    MPU9250_ADDRESS            0x68
@@ -75,8 +76,6 @@
 
 static void I2Cread(uint8_t Address, uint8_t Register, uint8_t Nbytes, uint8_t* Data);
 static void I2CwriteByte(uint8_t Address, uint8_t Register, uint8_t Data);
-static void MPL3115A2Standby();
-static void MPL3115A2Active();
 
 sensor::sensor() {
   accel_x = 0;
@@ -93,11 +92,17 @@ sensor::sensor() {
   gyro_y_bias = 0;
   gyro_z_bias = 0;
 
-  Wire.begin();
+  Wire.begin(); //allows for I2C Transaction
+
   I2CwriteByte(MPU9250_ADDRESS, 0x1b, GYRO_FULL_SCALE_2000_DPS); //configure the gyroscope
   I2CwriteByte(MPU9250_ADDRESS, 0x1c, ACC_FULL_SCALE_16_G); //configure the accelerometer
   //  I2CwriteByte(MPU9250_ADDRESS, 0x37, 0x02); //set the bypass bit
   I2CwriteByte(MPL3115A2_ADDRESS, CTRL_REG1, 0x04); // Set RST (bit 2) to 1
+
+  I2CwriteByte(MPL3115A2_ADDRESS, CTRL_REG1, 0xB9);
+  I2CwriteByte(MPL3115A2_ADDRESS, PT_DATA_CFG, 0x07);
+
+  if (DBG) Serial.begin(9600);
 }
 
 void sensor::calibrate() {
@@ -111,6 +116,7 @@ void sensor::calibrate() {
   }
   accel_x_bias += accel_x_bias_temp / 5;
   accel_y_bias += accel_y_bias_temp / 5;
+  if (DBG)Serial.println("*********************************end calibration");
 }
 
 /* imuTest
@@ -143,6 +149,9 @@ bool sensor::altTest() {//TODO fix this function. It's not working proplerly, bu
     return 0;
   }
   else {
+    if (DBG) Serial.print("**Return value was: ");
+    if (DBG) Serial.print(return_value);
+    if (DBG) Serial.println("**");
     return -1;
   }
 }
@@ -153,19 +162,35 @@ bool sensor::altTest() {//TODO fix this function. It's not working proplerly, bu
   @return: 0 if successful. nonzero otherwise.
 */
 int sensor::updateTelemetry() {
-  uint8_t Buf[14] = {0};
-  I2Cread(MPU9250_ADDRESS, 0x3B, 14, Buf);
+  uint8_t IMU_Buf[14] = {0};
+  uint8_t ALT_Buf[6] = {0};
+  I2Cread(MPU9250_ADDRESS, 0x3B, 14, IMU_Buf);
+  I2CwriteByte(MPL3115A2_ADDRESS, CTRL_REG1, 0xB9);
+  I2Cread(MPL3115A2_ADDRESS, 0x00, 6, ALT_Buf);
 
   // Create 16 bits values from 8 bits data
   // Accelerometer
-  accel_x = -(Buf[0] << 8 | Buf[1]); //TODO check the negative values. What's that about? lolz
-  accel_y = -(Buf[2] << 8 | Buf[3]);
-  accel_z = Buf[4] << 8 | Buf[5];
+  accel_x = -(IMU_Buf[0] << 8 | IMU_Buf[1]); //TODO check the negative values. What's that about? lolz
+  accel_y = -(IMU_Buf[2] << 8 | IMU_Buf[3]);
+  accel_z = IMU_Buf[4] << 8 | IMU_Buf[5];
 
   // Gyroscope
-  gyro_x = -(Buf[8] << 8 | Buf[9]);
-  gyro_y = -(Buf[10] << 8 | Buf[11]);
-  gyro_z = Buf[12] << 8 | Buf[13];
+  gyro_x = -(IMU_Buf[8] << 8 | IMU_Buf[9]);
+  gyro_y = -(IMU_Buf[10] << 8 | IMU_Buf[11]);
+  gyro_z = IMU_Buf[12] << 8 | IMU_Buf[13];
+
+  //Connor's test code
+  Serial.println("<Connor's Test Code>");
+  Serial.println(ALT_Buf[0]);
+  Serial.println(ALT_Buf[1]);
+  Serial.println(ALT_Buf[2]);
+  Serial.println(ALT_Buf[3]);
+  Serial.println(ALT_Buf[4]);
+  Serial.println("</Connor's Test Code>");
+  //
+  int tHeight = (((int32_t)(ALT_Buf[1] * (int32_t)65536) + (ALT_Buf[2] * 256) + (ALT_Buf[3] & 0xF0)) / 16);
+  altitude = tHeight / 16.0;
+
 }
 
 /* toString
@@ -175,12 +200,11 @@ int sensor::updateTelemetry() {
 */
 String sensor::toString() {
   String output;
-  output = String(accel_x) + "\t" + String(accel_y) + "\t" + String(accel_z) + "\t" + String(gyro_x) + "\t" + String(gyro_y) + "\t" + String(gyro_z);
+  output = String(accel_x) + "\t" + String(accel_y) + "\t" + String(accel_z) + "\t" + String(gyro_x) + "\t" + String(gyro_y) + "\t" + String(gyro_z) + "\t" + String(altitude);
   return output;
 }
 
-void I2Cread(uint8_t Address, uint8_t Register, uint8_t Nbytes, uint8_t* Data)
-{
+void I2Cread(uint8_t Address, uint8_t Register, uint8_t Nbytes, uint8_t* Data) {
   // Set register address
   Wire.beginTransmission(Address);
   Wire.write(Register);
@@ -194,30 +218,10 @@ void I2Cread(uint8_t Address, uint8_t Register, uint8_t Nbytes, uint8_t* Data)
 }
 
 // Write a byte (Data) in device (Address) at register (Register)
-void I2CwriteByte(uint8_t Address, uint8_t Register, uint8_t Data)
-{
+void I2CwriteByte(uint8_t Address, uint8_t Register, uint8_t Data) {
   // Set register address
   Wire.beginTransmission(Address);
   Wire.write(Register);
   Wire.write(Data);
   Wire.endTransmission();
-}
-
-// Sets the MPL3115A2 to standby mode.
-// It must be in standby to change most register settings
-static void MPL3115A2Standby()
-{
-  int8_t c = 0;
-  I2Cread(MPL3115A2_ADDRESS, CTRL_REG1, 1, &c); // Read contents of register CTRL_REG1
-  I2CwriteByte(MPL3115A2_ADDRESS, CTRL_REG1, c & ~(0x01)); // Set SBYB (bit 0) to 0
-}
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// Sets the MPL3115A2 to active mode.
-// Needs to be in this mode to output data
-static void MPL3115A2Active()
-{
-  int8_t c = 0;
-  I2Cread(MPL3115A2_ADDRESS, CTRL_REG1, 1, &c); // Read contents of register CTRL_REG1
-  I2CwriteByte(MPL3115A2_ADDRESS, CTRL_REG1, c | 0x01); // Set SBYB (bit 0) to 1
 }

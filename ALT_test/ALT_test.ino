@@ -34,7 +34,23 @@ void setup()
   // Stop I2C transmission
   Wire.endTransmission();
   delay(300);
+  //Connor's added code
+  Wire.beginTransmission(Addr);
+  Wire.write(0x0C);
+  Wire.endTransmission();
 
+  Wire.requestFrom(Addr, 1);
+  int8_t retval = 0;
+  if (Wire.available() == 1) {
+    retval = Wire.read();
+  }
+  Serial.print("The return value of WHO_AM_I is: ");
+  Serial.println(retval);
+  if (retval == 0xC4)
+    Serial.println("GOOD");
+  else
+    Serial.println("BAD");
+  //
 }
 
 void loop()
@@ -72,7 +88,7 @@ void loop()
     data[4] = Wire.read();
     data[5] = Wire.read();
   }
-
+  Serial.println("***" + String(data[0]));
 
   // Convert the data to 20-bits
   int tHeight = (((long)(data[1] * (long)65536) + (data[2] * 256) + (data[3] & 0xF0)) / 16);

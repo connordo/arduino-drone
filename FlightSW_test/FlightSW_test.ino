@@ -11,10 +11,10 @@ attitude *bbatt;
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
-  // bluetooth.begin(9600);
   if (DBG) Serial.println("DBG is set to one. Debug Statements will print");
 
   bbsensors = new sensor();
+  delay(5000);
   if (DBG) Serial.println("sensor object created");
   if (DBG) {
     Serial.print("IMU CHECK: ");
@@ -28,8 +28,9 @@ void setup() {
 }
 
 void loop() {
-  //  if (DBG) Serial.println(bbsensors->toString());
-  //  delay(1000);
+  // bbsensors->updateTelemetry();
+  // if (DBG) Serial.println(bbsensors->toString());
+  delay(1000);
 
   int8_t cmd = bbcomms->tick();
   if (cmd) Serial.println((char)cmd);
